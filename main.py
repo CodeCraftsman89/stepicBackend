@@ -1,20 +1,27 @@
-from typing import Annotated
+import random
+import string
+from typing import Annotated, Any
 
 import uvicorn
-from fastapi import FastAPI, File, UploadFile, BackgroundTasks, Cookie
+from fastapi import FastAPI, File, UploadFile, BackgroundTasks, Cookie, Response
 
 from fakeDB import sample_products
-from model import User, Feedback, Item, UserCreate
+from model import User, Feedback, Item, UserCreate, Login
 
 app = FastAPI(title="Return HTML")
 all_users: list[UserCreate] = []
 test_user: User = User(name="John Doe", id=1)
 feedbacks = []
+sessions: dict = {}
+text = [random.choice(string.ascii_lowercase + string.digits if i != 5 else string.ascii_uppercase) for i in range(10)]
+
+sample_user: dict = {"username": "user123", "password": "password123"}
+fake_db: list[Login] = [Login(**sample_user)]
 
 
 @app.get("/", name="Возвращаем html файл")
 def index():
-    with open('file.txt', 'r', encoding='utf-8') as file:
+    with open('ingex.html', 'r', encoding='utf-8') as file:
         html = file.read()
     return {"html": html}
 
@@ -113,6 +120,30 @@ async def read_items(ads_id: str | None = Cookie(default=None)):
 @app.get("/last_visit")
 def root(last_visit=Cookie()):
     return {"last visit": last_visit}
+
+
+@app.post("/login")
+def login(user_login: Login, response: Response):
+    for person in fake_db:  # перебрали юзеров в нашем примере базы данных
+        if person.username == user_login.username and person.password == user_login.password:
+
+            session_token = ''.join(text)
+            sessions[session_token] = user_login
+            response.set_cookie(key="session_token", value=session_token, httponly=True)
+            return {
+                "message": "куки установлены",
+                "session_token": session_token
+            }
+    return {"message": "Invalid username or password"}
+
+
+@app.get("/user")
+async def user_session(session: str, response: Response):
+    # ищем в сессиях был ли такой токен создан, и если был, то возвращаем связанного с ним юзера
+    user = sessions.get(session)
+    if user:
+        return user.dict()
+    return {"message": "Unauthorized"}
 
 
 if __name__ == '__main__':
