@@ -1,8 +1,7 @@
 import random
 import string
 from http.client import HTTPException
-from importlib.resources import read_text
-from typing import Annotated, Any
+from typing import Annotated
 
 import uvicorn
 from fastapi import FastAPI, File, UploadFile, BackgroundTasks, Cookie, Response
@@ -152,9 +151,9 @@ async def user_session(session: str, response: Response):
 @app.get("/headers")
 async def get_headers(request: Request) -> dict:
     if "User-Agent" not in request.headers:
-        raise HTTPException(status_code=400)
+        raise HTTPException()
     if "Accept-Language" not in request.headers:
-        raise HTTPException(status_code=400)
+        raise HTTPException()
     return {
         "User-Agent": request.headers["user-agent"],
         "Accept-Language": request.headers["accept-language"]
