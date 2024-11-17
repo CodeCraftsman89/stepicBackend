@@ -80,7 +80,7 @@ async def create_user(new_user: UserCreate) -> UserCreate:
     return new_user
 
 
-@app.get("/showuser", name="Все пользователи")
+@app.get("/show_user", name="Все пользователи")
 async def show_users() -> dict[str, list[UserCreate]]:
     return {"users": all_users}
 
