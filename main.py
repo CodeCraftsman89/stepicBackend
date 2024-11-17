@@ -1,9 +1,12 @@
 import random
 import string
+from http.client import HTTPException
+from importlib.resources import read_text
 from typing import Annotated, Any
 
 import uvicorn
 from fastapi import FastAPI, File, UploadFile, BackgroundTasks, Cookie, Response
+from starlette.requests import Request
 
 from fakeDB import sample_products
 from model import User, Feedback, Item, UserCreate, Login
@@ -144,6 +147,18 @@ async def user_session(session: str, response: Response):
     if user:
         return user.dict()
     return {"message": "Unauthorized"}
+
+
+@app.get("/headers")
+async def get_headers(request: Request) -> dict:
+    if "User-Agent" not in request.headers:
+        raise HTTPException(status_code=400)
+    if "Accept-Language" not in request.headers:
+        raise HTTPException(status_code=400)
+    return {
+        "User-Agent": request.headers["user-agent"],
+        "Accept-Language": request.headers["accept-language"]
+            }
 
 
 if __name__ == '__main__':
